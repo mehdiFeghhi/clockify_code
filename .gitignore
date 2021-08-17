@@ -1,0 +1,8 @@
+*.orig
+*.DS_Store
+*.user
+*build*/
+*.idea
+config.ini
+demofile2.txt
+venv
