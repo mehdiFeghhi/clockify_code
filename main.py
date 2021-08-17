@@ -1,15 +1,11 @@
 from pprint import pprint
-
-import pandas as pd
-import numpy as np
+import time
 import requests
 from requests.exceptions import HTTPError
 import json
 import re
 import configparser
 from pathlib import Path
-
-# Note /user required at the end of the base endpoint
 
 def is_work_this_person():
     url_base = 'https://api.clockify.me/api/v1/user'
@@ -36,11 +32,30 @@ def is_work_this_person():
     #
     response = requests.get(api_url, headers=headers)
     json_response_projects = response.json()
-    pprint(json_response_projects[0])
+    # pprint(json_response_projects[0])
     last_task = json_response_projects[0]
     time_interval = last_task.get('timeInterval')
+    # pprint("gi")
     if time_interval.get('end') is None:
-        return False
-    else:
-        print(time_interval.get('end'))
+        pprint("he is working")
         return True
+    else:
+        print(' '.join(("hi was ending at",time_interval.get('end'))))
+        return False
+
+def red_led_light():
+    print("red led light")
+
+def red_led_turn_down():
+    print("red led turn down")
+
+def main():
+    while True:
+        if is_work_this_person():
+            red_led_light()
+        else:
+            red_led_turn_down()
+
+
+if __name__ == "__main__":
+    main()
