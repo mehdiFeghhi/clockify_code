@@ -15,7 +15,7 @@ _url = 'https://api.clockify.me/api/v1'
 config = configparser.ConfigParser()
 config.read('config.ini')  # config.ini file with [clockify] and API_KEY = MyAPIKeyWithoutQuotes
 X_Api_Key = config.get('clockify', 'API_KEY')
-
+    # pprint(X_Api_Key)
 _headers = {'content-type': 'application/json', 'X-Api-Key': X_Api_Key}
 
 
@@ -28,12 +28,26 @@ def end_current_task():
     userId = json_response_base['id']
     api_time_entry = f'/workspaces/{workspaceId}/user/{userId}/time-entries'
     api_url = _url + api_time_entry
-
+    response = requests.get(api_url, headers=_headers)
+    json_response_entry = response.json()
+    data = json_response_entry[0]
+    # pprint(json_response_entry)
     current_utc = datetime.datetime.utcnow()
-    response = requests.post(api_url,headers=_headers,data = {"end":current_utc.strftime("%Y-%m-%dT%H:%M:%SZ")})
+    #
+    dictionary ={
+                 'start': data.get('timeInterval').get('start'),
+                 "billable": data.get("billable"),
+                 'description': data.get('description'),
+                 'projectId': data.get('projectId'),
+                 'taskId': data.get('taskId'),
+                 "end": current_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                 'tagIds':data.get('tagIds')}
+    app_json = json.dumps(dictionary)
+    response = requests.patch(api_url,headers = _headers,data=app_json)
     pprint(response)
     pprint(response.json())
-def is_work_this_person():
+
+def start_current_task():
     global _url,_url_base,_headers
 
     response = requests.get(_url_base, headers=_headers)
@@ -44,7 +58,41 @@ def is_work_this_person():
     api_url = _url + api_time_entry
     response = requests.get(api_url, headers=_headers)
     json_response_entry = response.json()
+    data = json_response_entry[0]
     # pprint(json_response_entry)
+    current_utc = datetime.datetime.utcnow()
+    #
+    dictionary ={
+                 'start': current_utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                 "billable": data.get("billable"),
+                 'description': data.get('description'),
+                 'projectId': data.get('projectId'),
+                 'taskId': data.get('taskId'),
+                 "end": None,
+                 'tagIds':data.get('tagIds')}
+
+    app_json = json.dumps(dictionary)
+    api_time_add_entry = f'/workspaces/{workspaceId}/time-entries'
+    api_url = _url + api_time_add_entry
+    response = requests.post(api_url,headers = _headers,data=app_json)
+    pprint(response)
+    pprint(response.json())
+
+
+
+def is_work_this_person():
+    global _url,_url_base,_headers
+
+    response = requests.get(_url_base, headers=_headers)
+    json_response_base = response.json()
+    # pprint(json_response_base)
+    workspaceId = json_response_base['activeWorkspace']
+    userId = json_response_base['id']
+    api_time_entry = f'/workspaces/{workspaceId}/user/{userId}/time-entries'
+    api_url = _url + api_time_entry
+    response = requests.get(api_url, headers=_headers)
+    json_response_entry = response.json()
+    # pprint(json_response_entry[0])
     last_task = json_response_entry[0]
     time_interval = last_task.get('timeInterval')
     # pprint("gi")
@@ -65,11 +113,11 @@ def red_led_turn_down():
 def main():
     while True:
         if is_work_this_person():
-            # red_led_light()
+            red_led_light()
             end_current_task()
         else:
             red_led_turn_down()
-
+            start_current_task()
 
 if __name__ == "__main__":
     main()
