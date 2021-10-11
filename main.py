@@ -7,6 +7,7 @@ import re
 import configparser
 import datetime
 from pathlib import Path
+import sys
 
 _url_base = 'https://api.clockify.me/api/v1/user'
 _url = 'https://api.clockify.me/api/v1'
@@ -97,10 +98,10 @@ def is_work_this_person():
     time_interval = last_task.get('timeInterval')
     # pprint("gi")
     if time_interval.get('end') is None:
-        pprint("he is working")
+        # print("he is working")
         return True
     else:
-        print(' '.join(("hi was ending at",time_interval.get('end'))))
+        print(' '.join(("Work was ending at",time_interval.get('end'))))
         return False
 
 def red_led_light():
@@ -111,13 +112,25 @@ def red_led_turn_down():
     print("red led turn down\n\n\n\n")
 
 def main():
-    while True:
+    com = sys.argv[1]
+    if com == 'start':
         if is_work_this_person():
-            red_led_light()
+            print("Error : You are at work now. You can stop your work by calling 'stop' or 'toggle'")
+        else:
+            start_current_task()
+    elif com == 'stop':
+        if is_work_this_person():
             end_current_task()
         else:
-            red_led_turn_down()
+            print("Error : You are not at work now. You can start your work by calling 'start' or 'toggle'")
+    elif com == 'toggle':
+        if is_work_this_person():
+            end_current_task()
+            print('You stopped your work successfully')
+        else:
             start_current_task()
+            print('You started your work successfully')
 
+                
 if __name__ == "__main__":
     main()
